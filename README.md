@@ -2,7 +2,7 @@
 
 A tiny pomodoro timer styled like a **pink handheld game console**. Pick a **50/10** or **25/5** focus cycle, or set your own countdown, then press the buttons or tap the screen like you would on a real handheld. It runs in any modern browser, and it also builds into a small macOS app where only the console floats on your desktop.
 
-![Pomo Lite: the home menu, a 50/10 focus session, a 25/5 break, and a countdown](screenshot.png)
+![Pomo Lite: the home menu, a 50/10 focus session, a 25/5 break, a countdown timer, and Until mode counting down to Wednesday at 07:00](screenshot.png)
 
 ## Try it
 
