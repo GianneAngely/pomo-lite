@@ -341,6 +341,9 @@ html.app .console { --w: calc(100vw - 56px); }
 .arr.dn svg { transform: rotate(180deg); }
 .idle .arr { visibility: visible; }
 .idle .bar { visibility: hidden; }
+.until-label { display: none; margin: 0; padding: .3em 1em; border-radius: 99em; background: rgba(255, 255, 255, .65); font-size: 1.9em; font-weight: 700; }
+.count-view.until .until-label { display: block; }
+.count-view.until .bar { display: none; }
 .field.sel .arr { opacity: 1; }
 
 .toast {
@@ -456,7 +459,7 @@ html.app .console { --w: calc(100vw - 56px); }
             </button>
             <button class="tile count" aria-label="Countdown">
               <svg><use href="#i-glass"/></svg>
-              <span class="tag"><b>Timer</b></span>
+              <span class="tag"><b id="countTag">Timer</b></span>
               <span class="live" id="countLive" hidden><i></i><b></b></span>
             </button>
           </div>
@@ -472,27 +475,31 @@ html.app .console { --w: calc(100vw - 56px); }
         </section>
 
         <section class="view count-view">
-          <span class="pill"><i></i><span id="countStatus">Set timer</span></span>
+          <div class="pills">
+            <span class="pill"><i></i><span id="countStatus">Set timer</span></span>
+            <span class="pill mode" data-hint="x" role="button" aria-label="Switch between timer and until mode"><b>X</b><span id="countMode">Timer</span></span>
+          </div>
           <div class="fields">
             <div class="field">
-              <button class="arr" data-f="0" data-d="up" aria-label="More hours"><svg><use href="#i-tri"/></svg></button>
+              <button class="arr" data-f="0" data-d="up" aria-label="Increase"><svg><use href="#i-tri"/></svg></button>
               <div class="digits" id="cf0"></div>
-              <button class="arr dn" data-f="0" data-d="down" aria-label="Fewer hours"><svg><use href="#i-tri"/></svg></button>
+              <button class="arr dn" data-f="0" data-d="down" aria-label="Decrease"><svg><use href="#i-tri"/></svg></button>
             </div>
-            <div class="digits colon"></div>
+            <div class="digits colon" id="cc1"></div>
             <div class="field">
-              <button class="arr" data-f="1" data-d="up" aria-label="More minutes"><svg><use href="#i-tri"/></svg></button>
+              <button class="arr" data-f="1" data-d="up" aria-label="Increase"><svg><use href="#i-tri"/></svg></button>
               <div class="digits" id="cf1"></div>
-              <button class="arr dn" data-f="1" data-d="down" aria-label="Fewer minutes"><svg><use href="#i-tri"/></svg></button>
+              <button class="arr dn" data-f="1" data-d="down" aria-label="Decrease"><svg><use href="#i-tri"/></svg></button>
             </div>
             <div class="digits colon"></div>
             <div class="field">
-              <button class="arr" data-f="2" data-d="up" aria-label="More seconds"><svg><use href="#i-tri"/></svg></button>
+              <button class="arr" data-f="2" data-d="up" aria-label="Increase"><svg><use href="#i-tri"/></svg></button>
               <div class="digits" id="cf2"></div>
-              <button class="arr dn" data-f="2" data-d="down" aria-label="Fewer seconds"><svg><use href="#i-tri"/></svg></button>
+              <button class="arr dn" data-f="2" data-d="down" aria-label="Decrease"><svg><use href="#i-tri"/></svg></button>
             </div>
           </div>
           <div class="bar"><i id="countBar"></i></div>
+          <p class="until-label" id="untilLabel"></p>
         </section>
 
         <footer class="bottombar" id="hints"></footer>
@@ -529,12 +536,13 @@ const DIRS = ['up', 'down', 'left', 'right'];
 const S = Object.assign({
   screen: 'home', sel: 0, muted: false,
   pomo: { mode: 50, phase: 'focus', running: false, endAt: 0, left: 50 * 60000, sessions: 0 },
-  count: { set: 15 * 60, field: 1, status: 'idle', endAt: 0, left: 0 },
+  count: { mode: 'timer', at: 0, set: 15 * 60, field: 1, status: 'idle', endAt: 0, left: 0 },
 }, (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })());
 const P = S.pomo, C = S.count;
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 
 if (!MODES[P.mode]) P.mode = 50; // saved before 25/5 existed
+if (!C.mode) { C.mode = 'timer'; C.at = 0; } // saved before until mode existed
 
 // the page was closed while a timer ran: move on to the next phase, paused
 if (P.running && now() >= P.endAt) { flip(true); P.running = false; P.left = dur(P.phase); }
@@ -635,7 +643,36 @@ function pomoMode() {
   arm('pomo');
   toast(`${mins('focus')} · ${mins('break')} mode`);
 }
+// until mode counts down to a fixed day and time (C.at)
+const DAY = 86400000;
+const midnight = t => new Date(t).setHours(0, 0, 0, 0);
+// a target day that already passed moves to tomorrow, same time of day (07:00 by default)
+function keepTargetAhead() {
+  if (C.at && midnight(C.at) >= midnight(now())) return;
+  const old = new Date(C.at), t = new Date(now() + DAY);
+  t.setHours(C.at ? old.getHours() : 7, C.at ? old.getMinutes() : 0, 0, 0);
+  C.at = t.getTime();
+}
+function dayLabel(t) {
+  const diff = Math.round((midnight(t) - midnight(now())) / DAY);
+  return diff === 0 ? 'today' : diff === 1 ? 'tomorrow' : new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function countMode() {
+  if (C.status === 'running' || C.status === 'paused') return toast('Reset to switch mode');
+  C.mode = C.mode === 'timer' ? 'until' : 'timer';
+  C.status = 'idle';
+  C.field = C.mode === 'until' ? 0 : 1;
+  keepTargetAhead();
+  arm('count');
+  toast(C.mode === 'until' ? 'Until mode' : 'Timer mode');
+}
 function countToggle() {
+  if (C.mode === 'until') {
+    if (C.status !== 'idle') C.status = 'idle'; // stop, or dismiss "time's up"
+    else if (C.at <= now()) return toast('Pick a future time');
+    else { C.endAt = C.at; C.status = 'running'; }
+    return arm('count');
+  }
   if (C.status === 'running') { C.left = cLeft(); C.status = 'paused'; }
   else if (C.status === 'paused') { C.endAt = now() + C.left; C.status = 'running'; }
   else if (!C.set) return toast('Set a time first');
@@ -644,6 +681,15 @@ function countToggle() {
 }
 function countReset() { C.status = 'idle'; C.left = 0; arm('count'); }
 function bump(f, d) {
+  if (C.mode === 'until') {
+    const t = new Date(C.at);
+    if (f === 0) t.setDate(t.getDate() + d);
+    else if (f === 1) t.setHours((t.getHours() + d + 24) % 24);
+    else t.setMinutes((t.getMinutes() + d + 60) % 60);
+    const day = midnight(t), today = midnight(now());
+    if (day >= today && day <= today + 365 * DAY) C.at = t.getTime();
+    return;
+  }
   const v = [Math.floor(C.set / 3600), Math.floor(C.set / 60) % 60, C.set % 60], max = [24, 60, 60];
   v[f] = (v[f] + d + max[f]) % max[f];
   C.set = v[0] * 3600 + v[1] * 60 + v[2];
@@ -669,6 +715,7 @@ function handle(b) {
   }
   if (b === 'a') countToggle();
   else if (b === 'b') countReset();
+  else if (b === 'x') countMode();
   else if (C.status === 'idle' && DIRS.includes(b)) {
     if (b === 'left') C.field = (C.field + 2) % 3;
     else if (b === 'right') C.field = (C.field + 1) % 3;
@@ -729,7 +776,7 @@ function digits(el, str) {
   el._v = str;
   let x = 0, spans = '';
   for (const ch of str) {
-    const w = ch === ':' ? 34 : 66;
+    const w = ch === ':' || ch === ' ' ? 34 : 66;
     spans += `<tspan x="${x + w / 2}" y="${ch === ':' ? -5 : 0}">${ch}</tspan>`;
     x += w;
   }
@@ -773,13 +820,20 @@ function render() {
   pv.classList.toggle('paused', pPaused);
 
   // countdown
-  const cl = cLeft(), cs = C.status === 'idle' ? C.set : Math.ceil(cl / 1000);
-  hms(cs).forEach((v, i) => digits($('#cf' + i), v));
-  $$('.field').forEach((f, i) => f.classList.toggle('sel', C.status === 'idle' && C.field === i));
-  txt($('#countStatus'), { idle: 'Set timer', running: 'Running', paused: 'Paused', done: "Time's up" }[C.status]);
-  $('#countBar').style.width = (C.status === 'idle' || !C.set ? 0 : 100 - 100 * cl / (C.set * 1000)).toFixed(2) + '%';
+  const until = C.mode === 'until', setting = C.status === 'idle', at = new Date(C.at);
+  const cl = cLeft(), cs = setting ? C.set : Math.ceil(cl / 1000);
+  const hm = two(at.getHours()) + ':' + two(at.getMinutes()), day = dayLabel(C.at);
+  (setting && until ? [two(at.getDate()), two(at.getHours()), two(at.getMinutes())] : hms(cs)).forEach((v, i) => digits($('#cf' + i), v));
+  digits($('#cc1'), setting && until ? ' ' : ':');
+  $$('.field').forEach((f, i) => f.classList.toggle('sel', setting && C.field === i));
+  txt($('#countMode'), until ? 'Until' : 'Timer');
+  txt($('#countTag'), until ? 'Until' : 'Timer');
+  txt($('#countStatus'), { idle: until ? 'Pick a time' : 'Set timer', running: 'Running', paused: 'Paused', done: "Time's up" }[C.status]);
+  txt($('#untilLabel'), setting ? `${day[0].toUpperCase()}${day.slice(1)} · ${hm}` : `until ${day} · ${hm}`);
+  $('#countBar').style.width = (setting || until || !C.set ? 0 : 100 - 100 * cl / (C.set * 1000)).toFixed(2) + '%';
   const cv = $('.count-view');
   ['idle', 'running', 'paused', 'done'].forEach(s => cv.classList.toggle(s, C.status === s));
+  cv.classList.toggle('until', until);
 
   // home
   $$('.tile').forEach((el, i) => el.classList.toggle('sel', S.sel === i));
@@ -791,6 +845,7 @@ function render() {
   // hints
   const H = S.screen === 'home' ? [['dpad', 'Select'], ['a', 'Open']]
     : S.screen === 'pomo' ? [['y', 'Skip'], ['b', 'Reset'], ['a', P.running ? 'Pause' : pPaused ? 'Resume' : 'Start']]
+    : C.mode === 'until' ? (C.status === 'idle' ? [['dpad', 'Set'], ['a', 'Start']] : [['a', C.status === 'done' ? 'OK' : 'Stop']])
     : C.status === 'idle' ? [['dpad', 'Set'], ['a', 'Start']]
     : [['b', 'Reset'], ['a', { running: 'Pause', paused: 'Resume', done: 'Again' }[C.status]]];
   const hs = $('#hints'), hk = JSON.stringify(H);
@@ -892,6 +947,7 @@ navigator.getBattery?.().then(b => {
 }).catch(() => {});
 
 $$('.colon').forEach(el => digits(el, ':'));
+keepTargetAhead(); // not with the state fixes above: it needs DAY and midnight
 if (native) { arm('pomo', true); arm('count', true); }
 render();
 setInterval(tick, 250);

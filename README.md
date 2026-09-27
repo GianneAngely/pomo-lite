@@ -26,7 +26,7 @@ This puts **Pomo Lite.app** in `/Applications`. Drag the console by its pink bod
 ## What's inside
 
 - **Pomodoro** — 50/10 or 25/5 cycles that keep rolling on their own, plus a count of finished focus sessions
-- **Countdown** — set hours, minutes, and seconds with the D-pad or the on-screen arrows
+- **Countdown** — set hours, minutes, and seconds, or switch to **Until** and count down to a day and time (say, Wednesday at 07:00)
 - **Home menu** — pick an app from the tiles, like a console home screen
 - **Alarms** — a chime, a quick rumble, and a glowing Home button when time is up. The macOS app also bounces its Dock icon.
 - **Keeps your place** — reload or reopen, and a running timer picks up where it left off
@@ -40,8 +40,8 @@ Every button on the console is clickable, and the screen works like a touchscree
 | A | `Space` | Start or pause |
 | B | `R` | Reset (press twice to clear finished sessions) |
 | Y | `S` | Skip to the next phase |
-| X | `X` | Switch between 50/10 and 25/5 |
-| D-pad or sticks | Arrow keys | Pick a tile, set the countdown |
+| X | `X` | Switch mode: 50/10 or 25/5, Timer or Until |
+| D-pad or sticks | Arrow keys | Pick a tile, set the countdown or the target day and time |
 | L / R | `Q` / `E` | Jump between Pomodoro and Countdown |
 | Home | `H` | Back to the home menu |
 | − | `M` | Sound on or off |
