@@ -1,10 +1,14 @@
-# 🍅 Pomo Lite
+# Pomo Lite
 
-A tiny pomodoro timer styled like a **pink handheld game console**. Pick a **50/10** or **25/5** focus cycle, or set your own countdown, then press the buttons or tap the screen like you would on a real handheld. It runs in any modern browser, and it also builds into a small macOS app where only the console floats on your desktop.
+A tiny pomodoro timer styled like a **pink handheld game console**. Pick a **50/10** or **25/5** focus cycle or set your own minutes, get a **long break after every four sessions**, name the task you're on, and see how much you focused this week. Press the buttons or tap the screen like you would on a real handheld. It runs in any modern browser, and it also builds into a small macOS app where only the console floats on your desktop, or shrinks to a tiny pill that stays on top.
 
-![Pomo Lite: the home menu, a 50/10 focus session, a 25/5 break, a countdown timer, and Until mode counting down to Wednesday at 07:00](screenshot.png)
+![Pomo Lite: a focus session on "Write report" with two of four tomatoes done, and the Stats screen with the last 7 days](screenshot.png)
+
+![Pomo Lite in action: opening Stats from the home menu, starting a focus session, and switching to mini mode](demo.gif)
 
 ## Try it
+
+Open it right in your browser at **[gianneangely.github.io/pomo-lite](https://gianneangely.github.io/pomo-lite/)**, or get your own copy:
 
 ```bash
 git clone https://github.com/GianneAngely/pomo-lite.git
