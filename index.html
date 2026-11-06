@@ -216,9 +216,8 @@ html.app .console { --w: calc(100vw - 56px); }
 }
 .screen[data-theme="break"] { --wall: #a4d8f3; --acc: #2f9fe0; }
 .screen[data-theme="count"] { --wall: #cbb6f4; --acc: #8a5de8; }
-.screen::after { content: ""; position: absolute; inset: 0; z-index: 8; background: #fff; opacity: 0; pointer-events: none; }
-.screen.snap::after { animation: snap .5s ease-out; }
-@keyframes snap { from { opacity: .9; } }
+.screen[data-theme="long"] { --wall: #a9e3c4; --acc: #22a466; }
+.screen[data-theme="stats"] { --wall: #ffd2a1; --acc: #f08a24; }
 
 .t { font-size: 2em; font-weight: 700; letter-spacing: .01em; }
 .topbar, .bottombar { position: absolute; left: 0; right: 0; z-index: 3; display: flex; align-items: center; padding: 0 2.2em; }
@@ -256,7 +255,9 @@ html.app .console { --w: calc(100vw - 56px); }
 }
 .screen[data-screen="home"] .home-view,
 .screen[data-screen="pomo"] .pomo-view,
-.screen[data-screen="count"] .count-view { display: flex; }
+.screen[data-screen="count"] .count-view,
+.screen[data-screen="stats"] .stats-view,
+.screen[data-screen="settings"] .set-view { display: flex; }
 @keyframes in { from { opacity: 0; transform: scale(.97); } }
 
 .pill {
@@ -277,6 +278,15 @@ html.app .console { --w: calc(100vw - 56px); }
 .running .pill i { animation: beat 2s ease-in-out infinite; }
 .pills { display: flex; gap: .8em; }
 .pill.mode { background: var(--ink); color: #fff; letter-spacing: .04em; }
+/* task pill: tap to name what you're working on */
+.pill.task { max-width: 17em; cursor: text; }
+.pill.task > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill .pen { flex: none; width: .9em; height: .9em; opacity: .45; }
+.task-in { width: 9em; padding: 0; border: 0; outline: 0; background: none; font: inherit; letter-spacing: .04em; color: var(--ink); }
+/* one tomato per finished focus; the set ends with a long break */
+.pill.dots { gap: .3em; padding: .3em .75em; }
+.dots svg { width: 1.3em; height: 1.3em; transition: opacity .3s, filter .3s; }
+.dots svg.o { opacity: .3; filter: grayscale(1); }
 .pill.mode b { width: 1.3em; height: 1.3em; display: grid; place-items: center; border-radius: 50%; background: #fff; color: var(--ink); font-size: .75em; }
 @keyframes beat { 50% { transform: scale(.5); opacity: .45; } }
 
@@ -312,6 +322,7 @@ html.app .console { --w: calc(100vw - 56px); }
 }
 .tile.pomo { background: linear-gradient(155deg, #ffa3cc, #ff639f); }
 .tile.count { background: linear-gradient(155deg, #d6c4ff, #9d7bf2); }
+.tile.stats { background: linear-gradient(155deg, #ffd59e, #ff9f43); }
 .tile > svg { width: 7.6em; height: 7.6em; transform: translateY(-.9em); }
 .tile.sel { transform: scale(1.06); }
 .tile.sel::before {
@@ -386,6 +397,56 @@ html.app .console { --w: calc(100vw - 56px); }
 @keyframes pop { from { transform: scale(0) rotate(-25deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(.3em); } }
 
+/* stats: focus minutes for the last 7 days */
+.stats-view { gap: 1.1em; }
+.chart { display: flex; align-items: flex-end; gap: 1.5em; height: 14.5em; }
+.col { display: flex; flex-direction: column; align-items: center; gap: .35em; }
+.col small { height: 1.2em; font-size: 1.35em; font-weight: 800; }
+.col i { width: 3.6em; border: .25em solid var(--ink); border-radius: .8em .8em .35em .35em; background: rgba(255, 255, 255, .8); box-shadow: 0 .2em 0 var(--ink); transition: height .5s cubic-bezier(.3, 1.3, .5, 1); }
+.col.today i { background: var(--acc); }
+.col b { font-size: 1.45em; font-weight: 800; opacity: .65; }
+.stats-sum { margin: 0; padding: .3em 1em; border-radius: 99em; background: rgba(255, 255, 255, .65); font-size: 1.8em; font-weight: 700; }
+
+/* settings (the + button) */
+.set-view { gap: .5em; }
+.set-row { display: flex; align-items: center; justify-content: space-between; width: 44em; padding: .3em .4em .3em 1.5em; border-radius: 99em; background: rgba(255, 255, 255, .45); cursor: pointer; }
+.set-row.sel { background: #fff; box-shadow: 0 0 0 .25em var(--ink); }
+.set-row > span:first-child { font-size: 1.8em; font-weight: 800; white-space: nowrap; }
+.set-row .val { display: flex; align-items: center; gap: .6em; }
+.set-row .val b { min-width: 5em; text-align: center; font-size: 1.8em; font-weight: 800; }
+.step { width: 1.7em; height: 1.7em; display: grid; place-items: center; padding: 0; border: .13em solid var(--ink); border-radius: 50%; background: #fff; color: var(--ink); font: 800 2em/1 PJS, system-ui, sans-serif; }
+
+/* mini mode (the capture button): a small pill that stays on top */
+.mini-pill { display: none; }
+html.mini .console { display: none; }
+html.mini body { overflow: hidden; }
+html.mini .mini-pill {
+  --acc: #ff4f9a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 252px;
+  height: 52px;
+  padding: 0 8px 0 10px;
+  color: #3a2537;
+  background: #f6c1e1;
+  border: 3px solid #3a2537;
+  border-radius: 99px;
+  box-shadow: 0 4px 0 rgba(58, 37, 55, .3);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mini-pill[data-theme="break"] { --acc: #2f9fe0; background: #c7e7f8; }
+.mini-pill[data-theme="long"] { --acc: #22a466; background: #c8eed9; }
+.mini-pill[data-theme="count"] { --acc: #8a5de8; background: #ddd0fa; }
+.mini-pill > svg { flex: none; width: 32px; height: 32px; }
+.mini-pill b { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.mini-pill span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
+.mini-pill button { flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 2.5px solid #3a2537; border-radius: 50%; background: #fff; color: #3a2537; cursor: pointer; }
+.mini-pill button svg { width: 16px; height: 16px; }
+.mini-pill.paused b { opacity: .5; }
+.mini-pill.rumble { animation: rumble .4s ease-in-out 2; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
@@ -412,6 +473,13 @@ html.app .console { --w: calc(100vw - 56px); }
     <rect x="22" y="11" width="56" height="10" rx="5" fill="#b690ff" stroke="#3a2537" stroke-width="5"/>
     <rect x="22" y="79" width="56" height="10" rx="5" fill="#b690ff" stroke="#3a2537" stroke-width="5"/>
   </symbol>
+  <symbol id="i-chart" viewBox="0 0 100 100">
+    <rect x="15" y="50" width="19" height="35" rx="5" fill="#fff" stroke="#3a2537" stroke-width="5"/>
+    <rect x="40.5" y="24" width="19" height="61" rx="5" fill="#ffd45e" stroke="#3a2537" stroke-width="5"/>
+    <rect x="66" y="38" width="19" height="47" rx="5" fill="#ff7aa8" stroke="#3a2537" stroke-width="5"/>
+  </symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1-5L15.5 4.5a2.1 2.1 0 0 1 3 3L8 18Z" fill="currentColor"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 100 100"><path d="M50 14l8 2 2 9 7 4 9-3 6 6-3 9 4 7 9 2 2 8-2 8-9 2-4 7 3 9-6 6-9-3-7 4-2 9-8 2-8-2-2-9-7-4-9 3-6-6 3-9-4-7-9-2-2-8 2-8 9-2 4-7-3-9 6-6 9 3 7-4 2-9Z" fill="#fff" stroke="#3a2537" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="50" r="12" fill="#ff7aa8" stroke="#3a2537" stroke-width="5"/></symbol>
   <symbol id="i-house" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></symbol>
   <symbol id="i-snd" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4Z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4Z" fill="currentColor"/><path d="m16 9.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
@@ -439,7 +507,7 @@ html.app .console { --w: calc(100vw - 56px); }
       <button data-btn="left" aria-label="Left"></button>
       <button data-btn="right" aria-label="Right"></button>
     </div>
-    <button class="key capture" data-btn="capture" aria-label="Capture"></button>
+    <button class="key capture" data-btn="capture" aria-label="Mini mode"></button>
 
     <div class="glass">
       <div class="screen" id="screen" data-screen="home" data-theme="home">
@@ -462,13 +530,17 @@ html.app .console { --w: calc(100vw - 56px); }
               <span class="tag"><b id="countTag">Timer</b></span>
               <span class="live" id="countLive" hidden><i></i><b></b></span>
             </button>
+            <button class="tile stats" aria-label="Stats">
+              <svg><use href="#i-chart"/></svg>
+              <span class="tag"><b id="statsTag">0 today</b></span>
+            </button>
           </div>
         </section>
 
         <section class="view pomo-view">
           <div class="pills">
-            <span class="pill"><i></i><span id="pomoPhase">Focus</span></span>
-            <span class="pill mode" data-hint="x" role="button" aria-label="Switch between 50/10 and 25/5"><b>X</b><span id="pomoMode">50 · 10</span></span>
+            <span class="pill task" id="taskPill" role="button" aria-label="Name your task"><i></i><span id="pomoPhase">Focus</span><svg class="pen"><use href="#i-pen"/></svg></span>
+            <span class="pill dots" id="dots" title="Finished focus sessions in this set"></span>
           </div>
           <div class="digits" id="pomoTime" data-hint="a"></div>
           <div class="bar"><i id="pomoBar"></i></div>
@@ -502,6 +574,11 @@ html.app .console { --w: calc(100vw - 56px); }
           <p class="until-label" id="untilLabel"></p>
         </section>
 
+        <section class="view stats-view">
+          <div class="chart" id="chart"></div>
+          <p class="stats-sum" id="statsSum"></p>
+        </section>
+        <section class="view set-view" id="setView"></section>
         <footer class="bottombar" id="hints"></footer>
         <div class="meta" title="Finished focus sessions"><svg><use href="#i-tomato"/></svg><span class="t" id="pomoCount">× 0</span></div>
         <div class="toast" id="toast" aria-live="polite"><svg><use href="#i-spark"/></svg><span class="t"></span></div>
@@ -509,7 +586,7 @@ html.app .console { --w: calc(100vw - 56px); }
       </div>
     </div>
 
-    <button class="plus" data-btn="plus" aria-label="Plus">
+    <button class="plus" data-btn="plus" aria-label="Settings">
       <svg viewBox="-1.5 -1.5 31 31" aria-hidden="true"><path d="M11 1h6a2 2 0 0 1 2 2v6h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-6v6a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-6H3a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h6V3a2 2 0 0 1 2-2Z" fill="#fdf8fb" stroke="#3a2537" stroke-width="3" stroke-linejoin="round"/></svg>
     </button>
     <button class="key face x" data-btn="x"><span>X</span></button>
@@ -519,39 +596,63 @@ html.app .console { --w: calc(100vw - 56px); }
     <div class="stick r" aria-hidden="true"><div class="cap"></div></div>
     <button class="key home" data-btn="home" aria-label="Home"><svg><use href="#i-house"/></svg></button>
   </div>
+  <div class="mini-pill" id="mini"><svg><use href="#i-tomato"/></svg><b id="miniTime">00:00</b><span id="miniPh">Focus</span><button id="miniOut" aria-label="Back to full size"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 
 </main>
 
 <script>
-const MODES = { 50: [50, 10], 25: [25, 5] }; // pomodoro presets: [focus, break] in minutes
+const PRESETS = { 50: [50, 10, 30], 25: [25, 5, 15] }; // pomodoro presets: [focus, break, long break] in minutes
 const KEY = 'pomolite:v1';
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const now = () => Date.now();
 const two = n => String(n).padStart(2, '0');
-const mins = ph => MODES[P.mode][ph === 'focus' ? 0 : 1];
+const mins = ph => S.set[ph === 'focus' ? 'focus' : ph === 'long' ? 'long' : 'brk'];
 const dur = ph => mins(ph) * 60000;
 const DIRS = ['up', 'down', 'left', 'right'];
+const APPS = ['pomo', 'count', 'stats']; // home tiles, in order
 
 const S = Object.assign({
-  screen: 'home', sel: 0, muted: false,
-  pomo: { mode: 50, phase: 'focus', running: false, endAt: 0, left: 50 * 60000, sessions: 0 },
+  screen: 'home', sel: 0, muted: false, mini: false, back: 'pomo', setSel: 0, days: {},
+  set: null, // { focus, brk, long, every, auto }: minutes, focus sessions per set, auto-start the next phase
+  pomo: { mode: 50, phase: 'focus', running: false, endAt: 0, left: 50 * 60000, sessions: 0, round: 0, task: '' },
   count: { mode: 'timer', at: 0, set: 15 * 60, field: 1, status: 'idle', endAt: 0, left: 0 },
 }, (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })());
 const P = S.pomo, C = S.count;
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 
-if (!MODES[P.mode]) P.mode = 50; // saved before 25/5 existed
+if (!PRESETS[P.mode]) P.mode = 50; // saved before 25/5 existed
+if (!S.set) { const [focus, brk, long] = PRESETS[P.mode]; S.set = { focus, brk, long, every: 4, auto: true }; } // saved before settings existed
+P.round ||= 0;
+P.task ||= '';
+S.days ||= {};
 if (!C.mode) { C.mode = 'timer'; C.at = 0; } // saved before until mode existed
 
 // the page was closed while a timer ran: move on to the next phase, paused
-if (P.running && now() >= P.endAt) { flip(true); P.running = false; P.left = dur(P.phase); }
+if (P.running && now() >= P.endAt) { flip(true, P.endAt); P.running = false; P.left = dur(P.phase); }
 if (C.status === 'running' && now() >= C.endAt) { C.status = 'done'; C.left = 0; }
 
-function flip(counted) {
-  if (P.phase === 'focus') { if (counted) P.sessions++; P.phase = 'break'; }
-  else P.phase = 'focus';
+// focus, break, focus, break ... and after every S.set.every finished focus sessions a long break
+function flip(counted, at = now()) {
+  if (P.phase === 'focus') {
+    if (counted) { P.sessions++; P.round++; logFocus(at); }
+    P.phase = P.round >= S.set.every ? 'long' : 'break';
+  } else {
+    if (P.phase === 'long') P.round = 0;
+    P.phase = 'focus';
+  }
 }
+/* ---------- stats: focus minutes per day (and per task), kept for 60 days ---------- */
+function dayKey(t) { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function logFocus(at) {
+  const k = dayKey(at), m = S.set.focus, d = S.days[k] ||= { n: 0, m: 0, tasks: {} };
+  d.n++;
+  d.m += m;
+  if (P.task) d.tasks[P.task] = (d.tasks[P.task] || 0) + m;
+  const oldest = dayKey(at - 60 * 86400000);
+  for (const key in S.days) if (key < oldest) delete S.days[key];
+}
+function hmin(m) { return m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`; }
 const pLeft = () => P.running ? Math.max(0, P.endAt - now()) : P.left;
 const cLeft = () => C.status === 'running' ? Math.max(0, C.endAt - now()) : C.left;
 
@@ -598,7 +699,8 @@ function blip() {
 function arm(kind, keep) {
   if (native) {
     const on = kind === 'pomo' ? P.running : C.status === 'running';
-    return native.postMessage({ kind, stop: !keep, muted: S.muted, endAt: on ? (kind === 'pomo' ? P.endAt : C.endAt) : 0, phase: P.phase, focus: dur('focus'), brk: dur('break') });
+    return native.postMessage({ kind, stop: !keep, muted: S.muted, endAt: on ? (kind === 'pomo' ? P.endAt : C.endAt) : 0,
+      phase: P.phase, focus: dur('focus'), brk: dur('break'), long: dur('long'), every: S.set.every, round: P.round, auto: S.set.auto });
   }
   for (const n of armed[kind]) if (!keep || n.at > ac.currentTime) try { n.o.stop(); } catch {}
   armed[kind] = [];
@@ -626,7 +728,7 @@ function pomoToggle() {
 }
 function pomoReset() {
   if (P.running || P.left !== dur(P.phase)) { P.running = false; P.left = dur(P.phase); }
-  else if (P.phase !== 'focus' || P.sessions) { P.phase = 'focus'; P.sessions = 0; P.left = dur('focus'); toast('Sessions cleared'); }
+  else if (P.phase !== 'focus' || P.sessions || P.round) { P.phase = 'focus'; P.sessions = 0; P.round = 0; P.left = dur('focus'); toast('Sessions cleared'); }
   arm('pomo');
 }
 function pomoSkip() {
@@ -638,10 +740,50 @@ function pomoSkip() {
 function pomoMode() {
   if (P.running) return toast('Pause to switch mode');
   P.mode = P.mode === 50 ? 25 : 50;
+  [S.set.focus, S.set.brk, S.set.long] = PRESETS[P.mode];
   P.phase = 'focus';
   P.left = dur('focus');
   arm('pomo');
   toast(`${mins('focus')} · ${mins('break')} mode`);
+}
+// settings rows: [key, label, min, max, step]
+const SET_ROWS = [['focus', 'Focus', 5, 90, 5], ['brk', 'Break', 1, 30, 1], ['long', 'Long break', 5, 60, 5], ['every', 'Long break after', 2, 8, 1], ['auto', 'Auto-start next', 0, 1, 1]];
+const setVal = (k, v) => k === 'auto' ? (v ? 'On' : 'Off') : k === 'every' ? `${v} focus` : `${v} min`;
+function changeSet(i, d) {
+  const [k, , lo, hi, step] = SET_ROWS[i], full = dur(P.phase);
+  S.set[k] = k === 'auto' ? !S.set.auto : Math.min(hi, Math.max(lo, S.set[k] + d * step));
+  if (!P.running && P.left === full) P.left = dur(P.phase); // not started yet: use the new length now
+  arm('pomo', true); // a running phase keeps its length; the next ones use the new settings
+}
+function toggleMini() {
+  S.mini = !S.mini;
+  applyMini();
+}
+function applyMini() {
+  document.documentElement.classList.toggle('mini', S.mini);
+  window.webkit?.messageHandlers?.mini?.postMessage(S.mini); // the Mac app shrinks the window and keeps it on top
+}
+function editTask() {
+  if (S.screen !== 'pomo' || $('#taskPill input')) return;
+  const pill = $('#taskPill'), inp = document.createElement('input');
+  inp.className = 'task-in';
+  inp.maxLength = 24;
+  inp.placeholder = 'What are you working on?';
+  inp.value = P.task;
+  $('#pomoPhase').hidden = true;
+  pill.querySelector('.pen').style.display = 'none';
+  pill.insertBefore(inp, pill.querySelector('.pen'));
+  const done = () => {
+    P.task = inp.value.trim();
+    inp.remove();
+    $('#pomoPhase').hidden = false;
+    pill.querySelector('.pen').style.display = '';
+    save();
+    render();
+  };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter' || e.key === 'Escape') inp.blur(); });
+  inp.addEventListener('blur', done, { once: true });
+  inp.focus();
 }
 // until mode counts down to a fixed day and time (C.at)
 const DAY = 86400000;
@@ -694,16 +836,29 @@ function bump(f, d) {
   v[f] = (v[f] + d + max[f]) % max[f];
   C.set = v[0] * 3600 + v[1] * 60 + v[2];
 }
-function go(scr) { S.screen = scr; if (scr !== 'home') S.sel = scr === 'count' ? 1 : 0; }
+function go(scr) { S.screen = scr; if (APPS.includes(scr)) S.sel = APPS.indexOf(scr); }
 
 function handle(b) {
   if (b === 'minus') { S.muted = !S.muted; arm('pomo'); arm('count'); return toast(S.muted ? 'Sound off' : 'Sound on'); }
-  if (b === 'capture') { const s = $('#screen'); s.classList.remove('snap'); void s.offsetWidth; s.classList.add('snap'); return; }
+  if (b === 'capture') return toggleMini();
+  if (b === 'plus') {
+    if (S.screen === 'settings') return go(S.back);
+    S.back = S.screen === 'home' ? 'pomo' : S.screen;
+    return go('settings');
+  }
   if (b === 'home') return go('home');
-  if (b === 'L' || b === 'R') return S.screen === 'home' ? (S.sel ^= 1) : go(S.screen === 'pomo' ? 'count' : 'pomo');
+  const step = b === 'R' || b === 'right' ? 1 : 2; // +1 or -1 around the three apps
+  if (b === 'L' || b === 'R') return S.screen === 'home' ? (S.sel = (S.sel + step) % 3) : go(APPS[(S.sel + step) % 3]);
   if (S.screen === 'home') {
-    if (b === 'left' || b === 'right') S.sel ^= 1;
-    else if (b === 'a') go(S.sel ? 'count' : 'pomo');
+    if (b === 'left' || b === 'right') S.sel = (S.sel + step) % 3;
+    else if (b === 'a') go(APPS[S.sel]);
+    return;
+  }
+  if (S.screen === 'stats') { if (b === 'a' || b === 'b') go('home'); return; }
+  if (S.screen === 'settings') {
+    if (b === 'up' || b === 'down') S.setSel = (S.setSel + (b === 'down' ? 1 : SET_ROWS.length - 1)) % SET_ROWS.length;
+    else if (b === 'left' || b === 'right') changeSet(S.setSel, b === 'right' ? 1 : -1);
+    else if (b === 'a' || b === 'b') go(S.back);
     return;
   }
   if (S.screen === 'pomo') {
@@ -743,18 +898,22 @@ function toast(msg) {
 function alertMe(msg) {
   toast(msg);
   glowUntil = now() + 8000;
-  const c = $('#console');
-  c.classList.remove('rumble'); void c.offsetWidth; c.classList.add('rumble');
+  for (const c of [$('#console'), $('#mini')]) { c.classList.remove('rumble'); void c.offsetWidth; c.classList.add('rumble'); }
 }
 
 /* ---------- loop ---------- */
 function tick() {
   const t = now();
   if (P.running && t >= P.endAt) {
-    while (t >= P.endAt) { flip(true); P.endAt += dur(P.phase); }
+    while (t >= P.endAt) {
+      flip(true, P.endAt);
+      P.endAt += dur(P.phase);
+      if (!S.set.auto) { P.running = false; P.left = dur(P.phase); break; } // wait for A to start the next phase
+    }
     if (!native) arm('pomo', true); // the macOS app schedules the whole cycle itself
     save();
-    alertMe(P.phase === 'break' ? `Break time · ${mins('break')} min` : 'Back to focus');
+    const msg = P.phase === 'break' ? `Break time · ${mins('break')} min` : P.phase === 'long' ? `Long break · ${mins('long')} min` : 'Back to focus';
+    alertMe(S.set.auto ? msg : `${msg} · press A`);
   }
   if (C.status === 'running' && t >= C.endAt) {
     C.status = 'done'; C.left = 0;
@@ -799,22 +958,24 @@ function hint([g, label]) {
 function render() {
   const scr = $('#screen'), t = now();
   scr.dataset.screen = S.screen;
-  scr.dataset.theme = S.screen === 'pomo' ? P.phase : S.screen;
+  scr.dataset.theme = S.screen === 'pomo' ? P.phase : S.screen === 'settings' ? 'home' : S.screen;
   const d = new Date();
   txt($('#clock'), two(d.getHours()) + ':' + two(d.getMinutes()));
   attr($('#snd use'), 'href', S.muted ? '#i-mute' : '#i-snd');
-  txt($('#appName'), S.screen === 'count' ? 'Countdown' : 'Pomodoro');
-  attr($('#appIcon use'), 'href', S.screen === 'count' ? '#i-glass' : '#i-tomato');
+  txt($('#appName'), { count: 'Countdown', stats: 'Stats', settings: 'Settings' }[S.screen] || 'Pomodoro');
+  attr($('#appIcon use'), 'href', { count: '#i-glass', stats: '#i-chart', settings: '#i-gear' }[S.screen] || '#i-tomato');
 
   // pomodoro
   const pl = pLeft(), full = dur(P.phase), pm = mmss(pl), pPaused = !P.running && pl < full;
   digits($('#pomoTime'), pm);
-  txt($('#pomoPhase'), P.phase === 'focus' ? 'Focus' : 'Break');
+  const phaseTxt = { focus: 'Focus', break: 'Break', long: 'Long break' }[P.phase];
+  txt($('#pomoPhase'), P.task ? `${phaseTxt} · ${P.task}` : phaseTxt);
   $('#pomoBar').style.width = (100 - 100 * pl / full).toFixed(2) + '%';
-  txt($('#pomoCount'), '× ' + P.sessions);
-  const modeTxt = `${mins('focus')} · ${mins('break')}`;
-  txt($('#pomoMode'), modeTxt);
-  txt($('#pomoTag'), modeTxt);
+  const today = S.days[dayKey(t)] || { n: 0, m: 0 };
+  txt($('#pomoCount'), today.m ? `today ${today.n} · ${hmin(today.m)}` : 'today 0');
+  const dots = Array.from({ length: S.set.every }, (_, i) => `<svg${i < P.round || P.phase === 'long' ? '' : ' class="o"'}><use href="#i-tomato"/></svg>`).join('');
+  if ($('#dots')._v !== dots) { $('#dots')._v = dots; $('#dots').innerHTML = dots; }
+  txt($('#pomoTag'), `${mins('focus')} · ${mins('break')}`);
   const pv = $('.pomo-view');
   pv.classList.toggle('running', P.running);
   pv.classList.toggle('paused', pPaused);
@@ -835,15 +996,36 @@ function render() {
   ['idle', 'running', 'paused', 'done'].forEach(s => cv.classList.toggle(s, C.status === s));
   cv.classList.toggle('until', until);
 
+  // stats: the last 7 days
+  const week = Array.from({ length: 7 }, (_, i) => { const at = t - (6 - i) * 86400000; return { at, ...(S.days[dayKey(at)] || { n: 0, m: 0, tasks: {} }) }; });
+  const top = Math.max(60, ...week.map(d => d.m)), total = week.reduce((a, d) => a + d.m, 0), tasks = {};
+  week.forEach(d => { for (const k in d.tasks) tasks[k] = (tasks[k] || 0) + d.tasks[k]; });
+  const best = Object.keys(tasks).sort((a, b) => tasks[b] - tasks[a])[0];
+  const chart = week.map((d, i) => `<div class="col${i === 6 ? ' today' : ''}"><small>${d.n || ''}</small><i style="height:${(0.6 + 10.5 * d.m / top).toFixed(2)}em"></i><b>${i === 6 ? 'Today' : new Date(d.at).toLocaleDateString('en-US', { weekday: 'short' })}</b></div>`).join('');
+  if ($('#chart')._v !== chart) { $('#chart')._v = chart; $('#chart').innerHTML = chart; }
+  txt($('#statsSum'), total ? `This week ${hmin(total)}${best ? ` · most on ${best}` : ''}` : 'Finish a focus session to see it here');
+  txt($('#statsTag'), `${today.n} today`);
+  // settings
+  const rows = SET_ROWS.map(([k, label], i) => `<div class="set-row${S.setSel === i ? ' sel' : ''}" data-row="${i}"><span>${label}</span><span class="val"><button class="step" data-step="-1" aria-label="Less">−</button><b>${setVal(k, S.set[k])}</b><button class="step" data-step="1" aria-label="More">+</button></span></div>`).join('');
+  if ($('#setView')._v !== rows) { $('#setView')._v = rows; $('#setView').innerHTML = rows; }
+  // mini mode pill: the countdown when only it runs, else the pomodoro
+  const showCount = C.status === 'running' && !P.running;
+  txt($('#miniTime'), showCount ? hms(cs).join(':').replace(/^00:/, '') : pm);
+  txt($('#miniPh'), showCount ? 'Countdown' : P.task || phaseTxt);
+  attr($('#mini use'), 'href', showCount ? '#i-glass' : '#i-tomato');
+  $('#mini').dataset.theme = showCount ? 'count' : P.phase;
+  $('#mini').classList.toggle('paused', showCount ? false : !P.running);
   // home
   $$('.tile').forEach((el, i) => el.classList.toggle('sel', S.sel === i));
-  txt($('#homeTitle'), S.sel ? 'Countdown' : 'Pomodoro');
+  txt($('#homeTitle'), ['Pomodoro', 'Countdown', 'Stats'][S.sel]);
   badge($('#pomoLive'), P.running || pPaused ? pm : '', P.running);
   const cRun = C.status === 'running' || C.status === 'paused';
   badge($('#countLive'), cRun ? hms(cs).join(':').replace(/^00:/, '') : C.status === 'done' ? '00:00' : '', C.status === 'running');
 
   // hints
   const H = S.screen === 'home' ? [['dpad', 'Select'], ['a', 'Open']]
+    : S.screen === 'stats' ? [['b', 'Back']]
+    : S.screen === 'settings' ? [['dpad', 'Change'], ['a', 'Done']]
     : S.screen === 'pomo' ? [['y', 'Skip'], ['b', 'Reset'], ['a', P.running ? 'Pause' : pPaused ? 'Resume' : 'Start']]
     : C.mode === 'until' ? (C.status === 'idle' ? [['dpad', 'Set'], ['a', 'Start']] : [['a', C.status === 'done' ? 'OK' : 'Stop']])
     : C.status === 'idle' ? [['dpad', 'Set'], ['a', 'Start']]
@@ -853,7 +1035,7 @@ function render() {
 
   $('[data-btn="home"]').classList.toggle('glow', C.status === 'done' || t < glowUntil);
   const title = C.status === 'running' && (S.screen === 'count' || !P.running) ? `${hms(cs).join(':')} · Countdown`
-    : P.running ? `${pm} · ${P.phase === 'focus' ? 'Focus' : 'Break'}`
+    : P.running ? `${pm} · ${phaseTxt}`
     : C.status === 'done' ? "Time's up · Pomo Lite" : 'Pomo Lite';
   if (document.title !== title) document.title = title;
 }
@@ -892,13 +1074,25 @@ $$('.stick').forEach(st => {
 
 // touch screen: tiles, hints, timer, countdown arrows
 $$('.tile').forEach((el, i) => el.addEventListener('pointerdown', e => {
-  e.preventDefault(); wake(); S.sel = i; go(i ? 'count' : 'pomo'); save(); render();
+  e.preventDefault(); wake(); go(APPS[i]); save(); render();
 }));
 $('#screen').addEventListener('pointerdown', e => {
+  if (e.target.closest('.task-in')) return;
+  if (e.target.closest('#taskPill')) { e.preventDefault(); wake(); return editTask(); }
+  const row = e.target.closest('[data-row]');
+  if (row) {
+    e.preventDefault(); wake();
+    S.setSel = +row.dataset.row;
+    const st = e.target.closest('[data-step]');
+    if (st) changeSet(S.setSel, +st.dataset.step);
+    save(); render();
+    return;
+  }
   const h = e.target.closest('[data-hint]');
   if (!h) return;
   e.preventDefault(); flash(h.dataset.hint); press(h.dataset.hint);
 });
+$('#miniOut').addEventListener('click', () => { toggleMini(); save(); });
 $$('.field').forEach((el, i) => el.addEventListener('pointerdown', () => {
   if (C.status === 'idle') { C.field = i; render(); } else { flash('a'); press('a'); }
 }));
@@ -919,21 +1113,22 @@ const dragMsg = window.webkit?.messageHandlers?.drag;
 if (dragMsg) {
   let over = false;
   addEventListener('pointerover', e => {
-    const o = e.target.classList.contains('shell') || e.target.classList.contains('glass');
+    const o = e.target.classList.contains('shell') || e.target.classList.contains('glass') || (!!e.target.closest('.mini-pill') && !e.target.closest('button'));
     if (o !== over) dragMsg.postMessage(over = o);
   });
 }
 
 const KEYS = {
   ' ': 'a', enter: 'a', a: 'a', b: 'b', backspace: 'b', r: 'b', x: 'x', y: 'y', s: 'y',
-  h: 'home', escape: 'home', m: 'minus', '-': 'minus', '=': 'plus', '+': 'plus', q: 'L', e: 'R', c: 'capture',
+  h: 'home', escape: 'home', m: 'minus', '-': 'minus', '=': 'plus', '+': 'plus', q: 'L', e: 'R', c: 'capture', t: 'task',
   arrowup: 'up', arrowdown: 'down', arrowleft: 'left', arrowright: 'right',
 };
 addEventListener('keydown', e => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input')) return;
   const b = KEYS[e.key.toLowerCase()];
   if (!b) return;
   e.preventDefault();
+  if (b === 'task') { wake(); return editTask(); }
   if (e.repeat && b !== 'up' && b !== 'down') return;
   flash(b);
   press(b);
@@ -948,6 +1143,7 @@ navigator.getBattery?.().then(b => {
 
 $$('.colon').forEach(el => digits(el, ':'));
 keepTargetAhead(); // not with the state fixes above: it needs DAY and midnight
+applyMini();
 if (native) { arm('pomo', true); arm('count', true); }
 render();
 setInterval(tick, 250);

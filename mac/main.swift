@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     var activity: NSObjectProtocol?
     var timers: [String: DispatchSourceTimer] = [:]
     var sounds: [String: NSSound] = [:]
-    var pomo = (phase: "focus", endAt: 0.0, focus: 0.0, brk: 0.0)
+    var pomo = (phase: "focus", endAt: 0.0, focus: 0.0, brk: 0.0, long: 0.0, every: 4, round: 0, auto: true)
     var muted = false
 
     func applicationDidFinishLaunching(_ note: Notification) {
@@ -34,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         let config = WKWebViewConfiguration()
         config.userContentController.add(self, name: "alarm")
         config.userContentController.add(self, name: "drag")
+        config.userContentController.add(self, name: "mini")
         config.mediaTypesRequiringUserActionForPlayback = []
         #if SNAPSHOT
         debugConfig(config)
@@ -85,15 +86,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     // Messages from index.html: alarm schedules per timer ("pomo" / "count") and the drag region
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "drag" { web.dragOK = message.body as? Bool ?? false; return }
+        if message.name == "mini" { setMini(message.body as? Bool ?? false); return }
         if message.name == "log" { print(message.body); return }
         guard let m = message.body as? [String: Any], let kind = m["kind"] as? String else { return }
         muted = m["muted"] as? Bool ?? false
         if m["stop"] as? Bool == true { sounds[kind]?.stop() }
         let endAt = (m["endAt"] as? Double ?? 0) / 1000
         if kind == "pomo" {
-            pomo = (m["phase"] as? String ?? "focus", endAt, (m["focus"] as? Double ?? 0) / 1000, (m["brk"] as? Double ?? 0) / 1000)
+            pomo = (m["phase"] as? String ?? "focus", endAt, (m["focus"] as? Double ?? 0) / 1000, (m["brk"] as? Double ?? 0) / 1000,
+                    (m["long"] as? Double ?? 0) / 1000, m["every"] as? Int ?? 4, m["round"] as? Int ?? 0, m["auto"] as? Bool ?? true)
         }
         arm(kind, at: endAt)
+    }
+
+    // Mini mode: a small pill that stays above other windows; the top-left corner stays put
+    func setMini(_ on: Bool) {
+        let size = on ? NSSize(width: 280, height: 84) : NSSize(width: consoleWidth + 56, height: (consoleWidth * 0.44 + 56).rounded())
+        var f = window.frame
+        guard f.size != size else { return }
+        f.origin.y += f.height - size.height
+        f.size = size
+        window.setFrame(f, display: true, animate: true)
+        window.level = on ? .floating : .normal
     }
 
     // Wall-clock timers stay on time even when the window is hidden or the Mac wakes from sleep
@@ -114,13 +128,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         var tune = "count"
         if kind == "pomo" {
             tune = pomo.phase == "focus" ? "break" : "focus" // focus just ended, so play the "break" tune
-            // the cycle keeps going on its own; after sleep, skip ahead to the current phase
+            // the cycle keeps going on its own (same rules as flip() in index.html); after sleep, skip ahead to the current phase
             let now = Date().timeIntervalSince1970, ok = pomo.focus > 0 && pomo.brk > 0
             repeat {
-                pomo.phase = pomo.phase == "focus" ? "break" : "focus"
-                pomo.endAt += pomo.phase == "focus" ? pomo.focus : pomo.brk
-            } while ok && pomo.endAt <= now
-            arm("pomo", at: ok ? pomo.endAt : 0)
+                if pomo.phase == "focus" {
+                    pomo.round += 1
+                    pomo.phase = pomo.round >= pomo.every ? "long" : "break"
+                } else {
+                    if pomo.phase == "long" { pomo.round = 0 }
+                    pomo.phase = "focus"
+                }
+                pomo.endAt += pomo.phase == "focus" ? pomo.focus : pomo.phase == "long" && pomo.long > 0 ? pomo.long : pomo.brk
+            } while ok && pomo.auto && pomo.endAt <= now
+            arm("pomo", at: ok && pomo.auto ? pomo.endAt : 0) // auto-start off: the page waits for A
         } else {
             arm("count", at: 0)
         }

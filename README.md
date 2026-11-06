@@ -25,9 +25,13 @@ This puts **Pomo Lite.app** in `/Applications`. Drag the console by its pink bod
 
 ## What's inside
 
-- **Pomodoro** — 50/10 or 25/5 cycles that keep rolling on their own, plus a count of finished focus sessions
+- **Pomodoro** — 50/10 or 25/5 cycles that keep rolling on their own, with a long break after every 4 focus sessions (four little tomatoes show where you are in the set)
+- **Settings** — the + button sets your own focus, break, and long-break minutes, how many sessions come before the long break, and whether the next phase starts by itself
+- **Task label** — tap the Focus pill (or press `T`) to name what you're working on
+- **Stats** — today's sessions and minutes under the timer, and a Stats tile with the last 7 days and the task you spent the most time on
+- **Mini mode** — the capture button shrinks the console to a small pill that stays above other windows
 - **Countdown** — set hours, minutes, and seconds, or switch to **Until** and count down to a day and time (say, Wednesday at 07:00)
-- **Home menu** — pick an app from the tiles, like a console home screen
+- **Home menu** — pick Pomodoro, Countdown, or Stats from the tiles, like a console home screen
 - **Alarms** — a chime, a quick rumble, and a glowing Home button when time is up. The macOS app also bounces its Dock icon.
 - **Keeps your place** — reload or reopen, and a running timer picks up where it left off
 
@@ -42,7 +46,10 @@ Every button on the console is clickable, and the screen works like a touchscree
 | Y | `S` | Skip to the next phase |
 | X | `X` | Switch mode: 50/10 or 25/5, Timer or Until |
 | D-pad or sticks | Arrow keys | Pick a tile, set the countdown or the target day and time |
-| L / R | `Q` / `E` | Jump between Pomodoro and Countdown |
+| L / R | `Q` / `E` | Jump between Pomodoro, Countdown, and Stats |
+| + | `+` | Settings |
+| Capture | `C` | Mini mode on or off |
+| Focus pill | `T` | Name your task |
 | Home | `H` | Back to the home menu |
 | − | `M` | Sound on or off |
 
